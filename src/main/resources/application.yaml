@@ -6,12 +6,12 @@ spring:
     name: Gateway-Client
   cloud:
     gateway:
-#      default-filters:
-#        - name: GlobalFilter #Global Filter로 지정된 java 파일 이름
-#          args:
-#            baseMessage: Spring Cloud Gateway Global Filter
-#            preLogger: true
-#            postLogger: true
+      default-filters:
+        - name: GlobalFilter #Global Filter로 지정된 java 파일 이름
+          args:
+            baseMessage: Spring Cloud Gateway Global Filter
+            preLogger: true
+            postLogger: true
       routes:
         - id: authentication_mng
           uri: http://localhost:8083
@@ -21,7 +21,9 @@ spring:
           filters:
             - RemoveRequestHeader=Cookie
         - id: show_tc_dstrct_mng
-          uri: lb://show-tcDstrctMng-service
+#          uri: lb://show-tcDstrctMng-service
+          uri:
+            http://localhost:8081
           predicates:
             - Path=/service1/tcDstrctMng/**
             - name: Method
