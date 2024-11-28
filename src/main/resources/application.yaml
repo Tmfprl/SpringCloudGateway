@@ -9,42 +9,41 @@ spring:
     name: Gateway-Client
   cloud:
     gateway:
-      default-filters:
-        - name: GlobalFilter #Global Filter로 지정된 java 파일 이름
-          args:
-            baseMessage: Spring Cloud Gateway Global Filter
-            preLogger: true
-            postLogger: true
+#      default-filters:
+#        - name: GlobalFilter #Global Filter로 지정된 java 파일 이름
+#          args:
+#            baseMessage: Spring Cloud Gateway Global Filter
+#            preLogger: true
+#            postLogger: true
       routes:
-
-#        - id: authentication_mng
-#          uri: http://localhost:8083
-#          predicates:
-#            - Path=/login
-##            GET, POST를 구분하지 않고, Request 헤더에 저장된 Cookie 값을 제거하기 위해서
-#          filters:
-#            - RemoveRequestHeader=Cookie
-
         - id: show_tc_dstrct_mng
 #          uri: lb://show-tcDstrctMng-service
           uri:
             http://localhost:8081
           predicates:
-            - Path=/service1/tcDstrctMng/**
+            - Path=/service1/**
             - name: Method
               args:
                 methods:
                   -  GET
           filters:
-            - AddRequestHeader=id, neighbor
+            - name: JwtAuthenticationFilterFactory
+              args:
+                preLogger: true
+                postLogger: true
         - id: show_tl_mvmneq_pass
           uri: http://localhost:8082
           predicates:
-            - Path=/service2/tlMvmneqPass/**
+            - Path=/service2/**
             - name: Method
               args:
                 methods:
                   - GET
+          filters:
+            - name: JwtAuthenticationFilterFactory
+              args:
+                preLogger: true
+                postLogger: true
 
 eureka:
   client:

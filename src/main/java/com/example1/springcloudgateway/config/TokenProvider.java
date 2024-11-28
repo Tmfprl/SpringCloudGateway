@@ -5,6 +5,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
+import java.util.Date;
+
 @Slf4j
 @Component
 public class TokenProvider {
@@ -13,9 +15,19 @@ public class TokenProvider {
     private String TOKEN_SECRET;
 
     // 토큰 검증
-    public void validateToken(String token) {
+    public boolean validateToken(String token) {
         log.info("token validate check");
-        Jwts.parser().setSigningKey(TOKEN_SECRET).parseClaimsJws(token);
+        try {
+            var claims = Jwts.parser().setSigningKey(TOKEN_SECRET).parseClaimsJws(token);
+            // 토큰 말료 기간 확인
+            if(!claims.getBody().getExpiration().before(new Date())) {
+                log.info("token expired");
+                return false;
+            }
+            return true;
+        } catch (JwtException e) {
+            throw e;
+        }
     }
 
 
