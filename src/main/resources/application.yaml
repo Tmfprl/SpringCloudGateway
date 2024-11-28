@@ -1,6 +1,9 @@
 server:
   port: 8000
 
+token:
+  secret: 4d516a02898d2166e5aec5d66037f196d4317ffa175a2b737e0fb535ecd9fcc6
+
 spring:
   application:
     name: Gateway-Client
@@ -13,13 +16,15 @@ spring:
             preLogger: true
             postLogger: true
       routes:
-        - id: authentication_mng
-          uri: http://localhost:8083
-          predicates:
-            - Path=/login
-#            GET, POST를 구분하지 않고, Request 헤더에 저장된 Cookie 값을 제거하기 위해서
-          filters:
-            - RemoveRequestHeader=Cookie
+
+#        - id: authentication_mng
+#          uri: http://localhost:8083
+#          predicates:
+#            - Path=/login
+##            GET, POST를 구분하지 않고, Request 헤더에 저장된 Cookie 값을 제거하기 위해서
+#          filters:
+#            - RemoveRequestHeader=Cookie
+
         - id: show_tc_dstrct_mng
 #          uri: lb://show-tcDstrctMng-service
           uri:
