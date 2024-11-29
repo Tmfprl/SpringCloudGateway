@@ -1,6 +1,7 @@
 package com.example1.springcloudgateway.filter;
 
 import com.example1.springcloudgateway.config.TokenProvider;
+import com.example1.springcloudgateway.service.GatewayLoginService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cloud.gateway.filter.GatewayFilter;
 import org.springframework.cloud.gateway.filter.factory.AbstractGatewayFilterFactory;
@@ -17,22 +18,24 @@ import java.net.URI;
 public class JwtAuthenticationFilterFactory extends AbstractGatewayFilterFactory<JwtAuthenticationFilterFactory.Config> {
 
     private final TokenProvider tokenProvider;
+    private final GatewayLoginService loginService;
 
-    public JwtAuthenticationFilterFactory(TokenProvider tokenProvider) {
+    public JwtAuthenticationFilterFactory(TokenProvider tokenProvider, GatewayLoginService loginService) {
         super(Config.class);
         this.tokenProvider = tokenProvider;
+        this.loginService = loginService;
     }
 
     // 토큰 검증
     @Override
-    public GatewayFilter apply(Config config) {//    Spring WebFlux에서 요청과 응답의 생명주기를 관리하고, 요청/응답의 데이터에 접근 및 조작을 가능하게 한다. (리액티브 프로그래밍 모델을 지원하는 웹 프레임워크)
+    public GatewayFilter apply(Config config) {     // Spring WebFlux에서 요청과 응답의 생명주기를 관리하고, 요청/응답의 데이터에 접근 및 조작을 가능하게 한다. (리액티브 프로그래밍 모델을 지원하는 웹 프레임워크)
         return (exchange, chain) -> {
             ServerHttpRequest request = exchange.getRequest();
             ServerHttpResponse response = exchange.getResponse();
 
             log.info("request PATH : {} ", request.getURI().getPath());
 
-            // 토큰을 (url생략..token=토큰)을 추출 해준다
+            // URL에 토큰이 포함되어 전달되는 경우이다.
             String token = request.getQueryParams().getFirst("token");
             log.info("token : {}", token);
             if (token == null || token.isEmpty()) {
@@ -57,6 +60,9 @@ public class JwtAuthenticationFilterFactory extends AbstractGatewayFilterFactory
 
             // 빌더를 사용하여 요청을 조작한 채로 다음 필터 체인으로 넘김(mutate 로 빌더를 다시 생성 할 수 있다.)
             return chain.filter(exchange.mutate().request(modifiedRequest).build());
+
+            // JSON 타입으로 바디안에 담겨서 토큰이 전달되는 경우
+
         };
     }
 

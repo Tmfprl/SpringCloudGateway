@@ -19,8 +19,8 @@ public class TokenProvider {
         log.info("token validate check");
         try {
             var claims = Jwts.parser().setSigningKey(TOKEN_SECRET).parseClaimsJws(token);
-            // 토큰 말료 기간 확인
-            if(!claims.getBody().getExpiration().before(new Date())) {
+            // 토큰 만료 기간 확인
+            if(claims.getBody().getExpiration().before(new Date())) {
                 log.info("token expired");
                 return false;
             }
