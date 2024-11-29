@@ -16,17 +16,18 @@ public class TokenProvider {
 
     // 토큰 검증
     public boolean validateToken(String token) {
-        log.info("token validate check");
+        log.info("Validating token...");
         try {
-            var claims = Jwts.parser().setSigningKey(TOKEN_SECRET).parseClaimsJws(token);
-            // 토큰 만료 기간 확인
-            if(claims.getBody().getExpiration().before(new Date())) {
-                log.info("token expired");
-                return false;
-            }
-            return true;
+            var claims = Jwts.parser()
+                    // token decrypt (복호화)
+                    .setSigningKey(TOKEN_SECRET)
+                    .parseClaimsJws(token)
+                    .getBody();
+            // token expiration check (토큰 만료 확인)
+            return !claims.getExpiration().before(new Date());
         } catch (JwtException e) {
-            throw e;
+            log.error("Token validation failed: {}", e.getMessage());
+            return false;
         }
     }
 

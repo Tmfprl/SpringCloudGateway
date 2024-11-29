@@ -3,6 +3,7 @@ package com.example1.springcloudgateway.filter;
 import com.example1.springcloudgateway.config.TokenProvider;
 import com.example1.springcloudgateway.service.GatewayLoginService;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.autoconfigure.web.ServerProperties;
 import org.springframework.cloud.gateway.filter.GatewayFilter;
 import org.springframework.cloud.gateway.filter.factory.AbstractGatewayFilterFactory;
 import org.springframework.http.HttpStatus;
@@ -10,20 +11,19 @@ import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.http.server.reactive.ServerHttpResponse;
 import org.springframework.stereotype.Component;
 
-
-import java.net.URI;
-
 @Slf4j
 @Component
 public class JwtAuthenticationFilterFactory extends AbstractGatewayFilterFactory<JwtAuthenticationFilterFactory.Config> {
 
     private final TokenProvider tokenProvider;
     private final GatewayLoginService loginService;
+    private final ServerProperties serverProperties;
 
-    public JwtAuthenticationFilterFactory(TokenProvider tokenProvider, GatewayLoginService loginService) {
+    public JwtAuthenticationFilterFactory(TokenProvider tokenProvider, GatewayLoginService loginService, ServerProperties serverProperties) {
         super(Config.class);
         this.tokenProvider = tokenProvider;
         this.loginService = loginService;
+        this.serverProperties = serverProperties;
     }
 
     // 토큰 검증
@@ -33,21 +33,45 @@ public class JwtAuthenticationFilterFactory extends AbstractGatewayFilterFactory
             ServerHttpRequest request = exchange.getRequest();
             ServerHttpResponse response = exchange.getResponse();
 
+            // 토큰이 헤더에 포함되어있을 경우
+            String token = request.getHeaders().getFirst("Authorization");
+
             log.info("request PATH : {} ", request.getURI().getPath());
 
             // URL에 토큰이 포함되어 전달되는 경우이다.
-            String token = request.getQueryParams().getFirst("token");
+            // String token = request.getQueryParams().getFirst("token");
             log.info("token : {}", token);
             if (token == null || token.isEmpty()) {
+                log.info("Token is empty. Requesting new token....");
                 // 없는 경우 토큰 발급
-                response.setStatusCode(HttpStatus.SEE_OTHER);
-                response.getHeaders().setLocation(URI.create("http://localhost:8083/login"));
-                return response.setComplete();
+//                response.setStatusCode(HttpStatus.SEE_OTHER);
+//                response.getHeaders().setLocation(URI.create("http://localhost:8083/login"));
+                // 이러면 그냥 요청만 하는거 잖아 게이트웨이의 역할을 못하잖아 8083 쪽에서 게이트웨이 요청 url 을 지정 할 수 없어 클라이언트 요청이 뭔지 알고 서비스에서 그런 처리를 해 못하잖아 바보야
+//                return response.setComplete();
+                return loginService.requestToken()
+                        // flatMap()을 사용하면 순차적으로 로직을 처릴 할 수 있다 (then() 처럼)
+                        // map과 flatMap은 둘 다 스트림의 중간에 값을 변환해주는 역할을 한다.
+                        // map은 1 : 1로 반환을 보증하고 flatMap은 1 : N을 변환할 수 있다.
+                        .flatMap(newToken -> {
+                            // 토큰 검증 후 헤더에 추가
+                            ServerHttpRequest modifiedRequest = exchange.getRequest()
+                                    .mutate()
+                                    .header("Authorization", "Bearer " + newToken)
+                                    .build();
+                            return chain.filter(exchange.mutate().request(modifiedRequest).build());
+                        })
+                        // onErrorReturn은 Reactive Stream에서 Error가 발생했을 경우 정해진 Fallback value를 리턴해주는 방식입니다.
+                        .onErrorResume(error -> {
+                            log.error("Error during token fetching: {}", error.getMessage());
+                            exchange.getResponse().setStatusCode(HttpStatus.UNAUTHORIZED);
+                            return exchange.getResponse().setComplete();
+                        });
             } else if (!tokenProvider.validateToken(token)) {
+                log.info("Token is not valid. Requesting new token....");
                 // 만료된 경우 재발급
-                response.setStatusCode(HttpStatus.BAD_REQUEST);
-                response.getHeaders().setLocation(URI.create("http://localhost:8083/refresh-token?token=" + token));
-                return response.setComplete();
+//                response.setStatusCode(HttpStatus.BAD_REQUEST);
+//                response.getHeaders().setLocation(URI.create("http://localhost:8083/refresh-token?token=" + token));
+//                return response.setComplete();
             }
             log.info("token validate success");
             // 토큰 검증 후 실행
