@@ -1,7 +1,11 @@
 server:
   port: 8000
 
+# 2시간(7,200,000), 1일(86,400,000) jwt token
 token:
+  expiration_time: 7200000
+  refresh_time: 86400000
+  #  터미널에서 'openssl rand -hex 32' 명령어로 생성한 암호 키
   secret: 4d516a02898d2166e5aec5d66037f196d4317ffa175a2b737e0fb535ecd9fcc6
 
 spring:
@@ -9,22 +13,7 @@ spring:
     name: Gateway-Client
   cloud:
     gateway:
-#      default-filters:
-#        - name: GlobalFilter #Global Filter로 지정된 java 파일 이름
-#          args:
-#            baseMessage: Spring Cloud Gateway Global Filter
-#            preLogger: true
-#            postLogger: true
       routes:
-#        - id: login_service
-#          uri:
-#            http://localhost:8083
-#          predicates:
-#            - Path=/getAuthentication/**
-#            - name: Method
-#              args:
-#                methods:
-#                  - GET
         - id: show_tc_dstrct_mng
 #          uri: lb://show-tcDstrctMng-service
           uri:
@@ -53,14 +42,32 @@ spring:
               args:
                 preLogger: true
                 postLogger: true
-        - id: filter_test
-          uri: http://local:8080
-          predicates:
-            - Path=/filterTest
-            - name: Method
-              args:
-                method:
-                  - GET
+  datasource:
+    hikari:
+      auto-commit: false
+      connection-test-query: select 1
+      maximum-pool-size: 10
+      pool-name: MyHikariCP
+      driver-class-name: org.postgresql.Driver
+      jdbc-url: jdbc:postgresql://211.189.132.159:15433/test_srlk3
+      username: postgres
+      password: postgres
+
+  jpa:
+    show_sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        default_batch_fetch_size: 100
+
+    hibernate:
+      ddl-auto: none
+
+logging:
+  level:
+    org.hibernate.orm.jdbc.bind: trace
+
 
 eureka:
   client:

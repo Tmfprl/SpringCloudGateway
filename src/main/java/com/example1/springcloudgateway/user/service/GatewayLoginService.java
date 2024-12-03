@@ -1,9 +1,8 @@
-package com.example1.springcloudgateway.service;
+package com.example1.springcloudgateway.user.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
@@ -21,25 +20,26 @@ public class GatewayLoginService {
         this.webClient = webClientBuilder.baseUrl("http://localhost:8083").build(); // 로그인 서비스 URL
     }
 
-    /**
-     *
-     * @return
-     */
     public Mono<String> requestToken() {
         log.info("request token...");
 
-        return webClient.post()
+        return webClient.get()
             .uri("http://localhost:8083/login")
                 .retrieve()
                 .bodyToMono(String.class)
-                .map(response -> {
+                .handle((response, sink) -> {
                     // JSON에서 토큰 추출
                     ObjectMapper mapper = new ObjectMapper();
                     try {
                         log.info("response : {}", mapper.writeValueAsString(response));
-                        return mapper.readTree(response).get("accessToken").asText();
+                        String token = mapper.readTree(response).get("accessToken").asText();
+                        if(token.isEmpty()) {
+                            sink.error(new NullPointerException());
+                            return;
+                        }
+                        sink.next(token);
                     } catch (JsonProcessingException e) {
-                        throw new RuntimeException(e);
+                        sink.error(new RuntimeException(e));
                     }
                 });
     }

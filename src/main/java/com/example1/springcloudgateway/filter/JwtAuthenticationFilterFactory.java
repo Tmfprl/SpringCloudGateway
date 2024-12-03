@@ -1,16 +1,20 @@
 package com.example1.springcloudgateway.filter;
 
-import com.example1.springcloudgateway.config.TokenProvider;
-import com.example1.springcloudgateway.service.GatewayLoginService;
+import com.example1.springcloudgateway.jwt.TokenProvider;
+import com.example1.springcloudgateway.user.service.GatewayLoginService;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.web.ServerProperties;
 import org.springframework.cloud.gateway.filter.GatewayFilter;
 import org.springframework.cloud.gateway.filter.factory.AbstractGatewayFilterFactory;
+import org.springframework.core.io.buffer.DataBuffer;
+import org.springframework.core.io.buffer.DefaultDataBufferFactory;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.http.server.reactive.ServerHttpResponse;
 import org.springframework.stereotype.Component;
+import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 
 import java.net.URI;
@@ -30,6 +34,7 @@ public class JwtAuthenticationFilterFactory extends AbstractGatewayFilterFactory
         this.serverProperties = serverProperties;
     }
 
+
     // 토큰 검증
     @Override
     public GatewayFilter apply(Config config) {     // Spring WebFlux에서 요청과 응답의 생명주기를 관리하고, 요청/응답의 데이터에 접근 및 조작을 가능하게 한다. (리액티브 프로그래밍 모델을 지원하는 웹 프레임워크
@@ -41,42 +46,30 @@ public class JwtAuthenticationFilterFactory extends AbstractGatewayFilterFactory
                 log.info("[GlobalFilter Start] request ID: {}, method: {}, path: {}", request.getId(), request.getMethod(), request.getPath());
             }
 
-            // 토큰이 헤더에 포함되어있을 경우
-            String token = request.getHeaders().getFirst("Authorization");
-
+            String token = request.getHeaders().getFirst(HttpHeaders.AUTHORIZATION);
             log.info("request PATH : {} ", request.getURI().getPath());
-
-//            loginService.requestToken();
-
-            // URL에 토큰이 포함되어 전달되는 경우이다.
-            // String token = request.getQueryParams().getFirst("token");
-            log.info("token : {}", token);
             if (token == null || token.isEmpty()) {
                 log.info("Token is empty. Requesting new token....");
-                loginService.requestToken();
-                // 없는 경우 토큰 발급
-//                response.setStatusCode(HttpStatus.SEE_OTHER);
-                log.info("request token : {}", token);
-//                response.getHeaders().setLocation(URI.create("http://localhost:8083/login"));
-//                return response.setComplete();
-//                return loginService.requestToken()
-//                        // flatMap()을 사용하면 순차적으로 로직을 처릴 할 수 있다 (then() 처럼)
-//                        // map과 flatMap은 둘 다 스트림의 중간에 값을 변환해주는 역할을 한다.
-//                        // map은 1 : 1로 반환을 보증하고 flatMap은 1 : N을 변환할 수 있다.
-//                        .flatMap(newToken -> {
-//                            // 토큰 검증 후 헤더에 추가
-//                            ServerHttpRequest modifiedRequest = exchange.getRequest()
-//                                    .mutate()
-//                                    .header("Authorization", "Bearer " + newToken)
-//                                    .build();
-//                            return chain.filter(exchange.mutate().request(modifiedRequest).build());
-//                        })
-//                        // onErrorReturn은 Reactive Stream에서 Error가 발생했을 경우 정해진 Fallback value를 리턴해주는 방식입니다.
-//                        .onErrorResume(error -> {
-//                            log.error("Error during token fetching: {}", error.getMessage());
-//                            exchange.getResponse().setStatusCode(HttpStatus.UNAUTHORIZED);
-//                            return exchange.getResponse().setComplete();
-//                        });
+                // 로그인 서비스로 요청 보내기
+                response.setStatusCode(HttpStatus.UNAUTHORIZED);
+                response.setComplete();
+                WebClient webClient = WebClient.create();
+                return webClient.post()
+                        .uri("http://localhost:8083/login")
+                        .retrieve()
+                        .bodyToMono(String.class)
+                        .flatMap(loginResponse -> {
+                            log.info("로그인 폼 응답: {}", loginResponse);
+                            DataBuffer dataBuffer = new DefaultDataBufferFactory().wrap(loginResponse.getBytes());
+                            return response.writeWith(Mono.just(dataBuffer));  // 응답 본문 작성
+
+                        })
+                        .onErrorResume(e -> {
+                            log.error("로그인 요청 실패", e);
+                            response.setStatusCode(HttpStatus.INTERNAL_SERVER_ERROR);
+                            return response.setComplete();
+                        });
+
             } else if (!tokenProvider.validateToken(token)) {
                 log.info("Token is not valid. Requesting new token....");
                 // 만료된 경우 재발급
