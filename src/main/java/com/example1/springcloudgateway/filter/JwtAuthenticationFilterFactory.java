@@ -1,5 +1,6 @@
 package com.example1.springcloudgateway.filter;
 
+import com.example1.springcloudgateway.config.SecurityConfig;
 import com.example1.springcloudgateway.jwt.TokenProvider;
 import com.example1.springcloudgateway.user.service.GatewayLoginService;
 import lombok.Data;
@@ -26,12 +27,14 @@ public class JwtAuthenticationFilterFactory extends AbstractGatewayFilterFactory
     private final TokenProvider tokenProvider;
     private final GatewayLoginService loginService;
     private final ServerProperties serverProperties;
+    private final SecurityConfig securityConfig;
 
-    public JwtAuthenticationFilterFactory(TokenProvider tokenProvider, GatewayLoginService loginService, ServerProperties serverProperties) {
+    public JwtAuthenticationFilterFactory(TokenProvider tokenProvider, GatewayLoginService loginService, ServerProperties serverProperties, SecurityConfig securityConfig) {
         super(Config.class);
         this.tokenProvider = tokenProvider;
         this.loginService = loginService;
         this.serverProperties = serverProperties;
+        this.securityConfig = securityConfig;
     }
 
 

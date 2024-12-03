@@ -1,4 +1,4 @@
-package org.example.web_mng_authentication.config;
+package com.example1.springcloudgateway.filter;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;

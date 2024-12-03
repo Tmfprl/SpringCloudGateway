@@ -1,4 +1,4 @@
-package org.example.web_mng_authentication.config;
+package com.example1.springcloudgateway.config;
 
 import com.zaxxer.hikari.HikariDataSource;
 import org.springframework.boot.context.properties.ConfigurationProperties;

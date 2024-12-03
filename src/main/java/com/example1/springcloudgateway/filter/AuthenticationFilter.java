@@ -1,8 +1,6 @@
 package com.example1.springcloudgateway.filter;
 
-import com.example1.springcloudgateway.config.CustomAuthenticationProvider;
 import com.example1.springcloudgateway.jwt.TokenProvider;
-import com.example1.springcloudgateway.user.dto.UserLoginRequestDto;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.ServletRequest;
@@ -29,7 +27,6 @@ public class AuthenticationFilter extends UsernamePasswordAuthenticationFilter {
 
     private final TokenProvider tokenProvider;
     private final CustomAuthenticationProvider cutomAuthenticationProvider;
-    final String TOKEN_ACCESS_KEY = "access-token";
 
     public AuthenticationFilter(CustomAuthenticationProvider cutomAuthenticationProvider, TokenProvider tokenProvider) {
         this.cutomAuthenticationProvider = cutomAuthenticationProvider;

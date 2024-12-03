@@ -1,12 +1,9 @@
-package org.example.web_mng_authentication.exception;
+package com.example1.springcloudgateway.exception;
 
+import com.example1.springcloudgateway.exception.response.ErrorCode;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
-import org.example.web_mng_authentication.exception.response.ErrorCode;
-import org.example.web_mng_authentication.exception.response.ErrorrResponse;
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.authentication.BadCredentialsException;
-import org.springframework.web.bind.annotation.ExceptionHandler;
+
 
 @Slf4j
 @Getter

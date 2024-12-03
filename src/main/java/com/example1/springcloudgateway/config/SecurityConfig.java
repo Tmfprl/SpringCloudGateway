@@ -1,6 +1,7 @@
 package com.example1.springcloudgateway.config;
 
 import com.example1.springcloudgateway.filter.AuthenticationFilter;
+import com.example1.springcloudgateway.filter.CustomAuthenticationProvider;
 import com.example1.springcloudgateway.jwt.TokenProvider;
 import com.example1.springcloudgateway.user.service.CustomAuthSuccessHandler;
 import lombok.RequiredArgsConstructor;

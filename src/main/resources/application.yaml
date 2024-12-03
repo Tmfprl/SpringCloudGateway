@@ -24,11 +24,11 @@ spring:
               args:
                 methods:
                   -  GET
-          filters:
-            - name: JwtAuthenticationFilterFactory
-              args:
-                preLogger: true
-                postLogger: true
+#          filters:
+#            - name: JwtAuthenticationFilterFactory
+#              args:
+#                preLogger: true
+#                postLogger: true
         - id: show_tl_mvmneq_pass
           uri: http://localhost:8082
           predicates:
@@ -37,11 +37,11 @@ spring:
               args:
                 methods:
                   - GET
-          filters:
-            - name: JwtAuthenticationFilterFactory
-              args:
-                preLogger: true
-                postLogger: true
+#          filters:
+#            - name: JwtAuthenticationFilterFactory
+#              args:
+#                preLogger: true
+#                postLogger: true
   datasource:
     hikari:
       auto-commit: false
@@ -63,6 +63,8 @@ spring:
 
     hibernate:
       ddl-auto: none
+  main:
+    allow-bean-definition-overriding: true
 
 logging:
   level:
@@ -75,5 +77,3 @@ eureka:
     fetch-registry: true
     service-url:
       default-zone: http://localhost:8761/eureka
-
-

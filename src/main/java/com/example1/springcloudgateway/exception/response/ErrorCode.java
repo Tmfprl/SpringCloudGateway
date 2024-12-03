@@ -1,4 +1,4 @@
-package org.example.web_mng_authentication.exception.response;
+package com.example1.springcloudgateway.exception.response;
 
 import lombok.Getter;
 

@@ -1,4 +1,4 @@
-package com.example1.springcloudgateway.config;
+package com.example1.springcloudgateway.filter;
 
 import com.example1.springcloudgateway.user.service.UserApiService;
 import lombok.RequiredArgsConstructor;

@@ -1,5 +1,7 @@
 package com.example1.springcloudgateway.user.controller;
 
+import com.example1.springcloudgateway.exception.ServiceCoustomException;
+import com.example1.springcloudgateway.exception.response.ErrorCode;
 import com.example1.springcloudgateway.jwt.TokenProvider;
 import com.example1.springcloudgateway.user.dto.UserInfoDto;
 import com.example1.springcloudgateway.user.dto.UserResponseAllDto;
@@ -12,8 +14,6 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.example.web_mng_authentication.exception.ServiceCoustomException;
-import org.example.web_mng_authentication.exception.response.ErrorCode;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
