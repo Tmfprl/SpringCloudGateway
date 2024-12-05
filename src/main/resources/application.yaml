@@ -6,61 +6,37 @@ token:
 
 spring:
   application:
-    name: Gateway-Client
+    name: SpringCloudGateway
   cloud:
     gateway:
-#      default-filters:
-#        - name: GlobalFilter #Global Filter로 지정된 java 파일 이름
-#          args:
-#            baseMessage: Spring Cloud Gateway Global Filter
-#            preLogger: true
-#            postLogger: true
+      default-filters:
+        - name: GlobalFilter #Global Filter로 지정된 java 파일 이름
+          args:
+            baseMessage: Spring Cloud Gateway Global Filter
+            preLogger: true
+            postLogger: true
       routes:
-#        - id: login_service
-#          uri:
-#            http://localhost:8083
-#          predicates:
-#            - Path=/getAuthentication/**
-#            - name: Method
-#              args:
-#                methods:
-#                  - GET
+        - id: authentication_mng
+          uri: http://localhost:8083
+          predicates:
+            - Path=/login/**
+          filters:
+            - name: CustomFilter
         - id: show_tc_dstrct_mng
-#          uri: lb://show-tcDstrctMng-service
           uri:
             http://localhost:8081
           predicates:
             - Path=/service1/**
-            - name: Method
-              args:
-                methods:
-                  -  GET
           filters:
-            - name: JwtAuthenticationFilterFactory
-              args:
-                preLogger: true
-                postLogger: true
+            - name: CustomFilter
         - id: show_tl_mvmneq_pass
           uri: http://localhost:8082
           predicates:
             - Path=/service2/**
-            - name: Method
-              args:
-                methods:
-                  - GET
           filters:
-            - name: JwtAuthenticationFilterFactory
-              args:
-                preLogger: true
-                postLogger: true
-        - id: filter_test
-          uri: http://local:8080
-          predicates:
-            - Path=/filterTest
-            - name: Method
-              args:
-                method:
-                  - GET
+            - name: CustomFilter
+  main:
+    web-application-type: reactive
 
 eureka:
   client:
