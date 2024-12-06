@@ -10,7 +10,7 @@ import java.util.Date;
 @Slf4j
 @Component
 public class TokenProvider {
-
+//terminal insert code
     @Value("${token.secret}")
     private String TOKEN_SECRET;
 
