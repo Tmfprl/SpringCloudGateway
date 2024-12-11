@@ -26,11 +26,13 @@ public class CustomFilter extends AbstractGatewayFilterFactory<CustomFilter.Conf
     private String token;
     private final TokenProvider tokenProvider;
     final ExtractBody extractBody;
+    public final CustomFilterService customFilterService;
 
     public CustomFilter(TokenProvider tokenProvider, ExtractBody extractBody) {
         super(Config.class);
         this.tokenProvider = tokenProvider;
         this.extractBody = extractBody;
+        this.customFilterService = new CustomFilterService();
     }
 // 그런데 결국 request 는 요청되지 않은 거잖아
     @Override
@@ -39,8 +41,10 @@ public class CustomFilter extends AbstractGatewayFilterFactory<CustomFilter.Conf
             // Pre process start ====================================================
             ServerHttpRequest request = exchange.getRequest();
             ServerHttpResponse response = exchange.getResponse();
+            System.out.println("request uri : "+request.getURI());
 
             log.info("Custom Filter: request uri -> {}", request.getId());
+
 
             // Pre process end =======================================================
             return exchange.getRequest().getBody()
@@ -74,12 +78,6 @@ public class CustomFilter extends AbstractGatewayFilterFactory<CustomFilter.Conf
                             .bodyValue("username=" + username + "&password=" + password)
                             .retrieve()
                             .bodyToMono(String.class)
-//                            .doOnNext(responseBody ->
-//                                    log.info("응답: {}", responseBody))
-//                            .then();
-//                            .flatMap(f -> {
-//                               return chain.filter(exchange.mutate().request(request).build());
-//                            });
                             .flatMap(responseBody -> {
                                 // 응답에서 accessToken 추출
                                 token = extractBody.extractTokenFromBody(responseBody, "accessToken");
@@ -95,15 +93,10 @@ public class CustomFilter extends AbstractGatewayFilterFactory<CustomFilter.Conf
                                     response.setStatusCode(HttpStatus.FOUND);
                                     log.info("Extracted User: {}", user);
                                     response.getHeaders().add(HttpHeaders.AUTHORIZATION, "X-USERID " + user);
+
                                     response.getHeaders().setLocation(URI.create("http://localhost:8081/service1/tcDstrctMng?userId="+user));
                                     return Mono.empty();
                                 }
-//                                        log.info("Token validated");
-//                                        log.info("request: {}", request.getURI());
-//                                        return chain.filter(exchange).then(Mono.fromRunnable(() -> {
-//                                            log.info("Post chain action executed after token validation");
-//                                        }));
-//                                    }
                                     else {
                                         return Mono.error(new IllegalArgumentException("Invalid token"));
                                     }
