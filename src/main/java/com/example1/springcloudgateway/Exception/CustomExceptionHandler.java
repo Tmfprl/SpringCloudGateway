@@ -19,4 +19,5 @@ public class CustomExceptionHandler {
                         .detailMessage(ExceptionCode.NOT_FOUND_URL.getCode())
                         .build());
     }
+
 }

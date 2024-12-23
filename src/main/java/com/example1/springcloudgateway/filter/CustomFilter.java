@@ -3,6 +3,7 @@ package com.example1.springcloudgateway.filter;
 import com.example1.springcloudgateway.config.TokenProvider;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cloud.gateway.filter.GatewayFilter;
+import org.springframework.cloud.gateway.filter.GatewayFilterChain;
 import org.springframework.cloud.gateway.filter.factory.AbstractGatewayFilterFactory;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -12,6 +13,7 @@ import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.http.server.reactive.ServerHttpResponse;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 
 import java.net.URI;
@@ -32,7 +34,7 @@ public class CustomFilter extends AbstractGatewayFilterFactory<CustomFilter.Conf
         super(Config.class);
         this.tokenProvider = tokenProvider;
         this.extractBody = extractBody;
-        this.customFilterService = new CustomFilterService();
+        this.customFilterService = new CustomFilterService(extractBody, tokenProvider);
     }
 // 그런데 결국 request 는 요청되지 않은 거잖아
     @Override
@@ -42,66 +44,67 @@ public class CustomFilter extends AbstractGatewayFilterFactory<CustomFilter.Conf
             ServerHttpRequest request = exchange.getRequest();
             ServerHttpResponse response = exchange.getResponse();
             System.out.println("request uri : "+request.getURI());
-
+            String url = request.getURI().toString();
             log.info("Custom Filter: request uri -> {}", request.getId());
 
 
             // Pre process end =======================================================
-            return exchange.getRequest().getBody()
-                    .collectList()
-                    .flatMap(dataBuffers -> {
-                        // 요청 바디를 읽기
-                        String body = dataBuffers.stream()
-                                .map(buffer -> StandardCharsets.UTF_8.decode(buffer.asByteBuffer()).toString())
-                                .reduce("", String::concat);
-
-                        log.info("Request Body: {}", body);
-
-                        // body에서 username과 password 추출 (파싱 작업 필요)
-                        String username = extractBody.extractValueFromBody(body, "username");
-                        String password = extractBody.extractValueFromBody(body, "password");
-
-
-                        if (username == null || password == null) {
-                            return Mono.error(new IllegalArgumentException("Invalid login information"));
-                        }
-
-                        if(!request.getPath().toString().contains("/login")){
-                            return Mono.error(new IllegalArgumentException("Invalid login information"));
-                        }
-
-                        // WebClient로 로그인 요청 전송
-                         return WebClient.create()
-                            .post()
-                            .uri("http://localhost:8083/login")
-                            .contentType(MediaType.APPLICATION_FORM_URLENCODED)
-                            .bodyValue("username=" + username + "&password=" + password)
-                            .retrieve()
-                            .bodyToMono(String.class)
-                            .flatMap(responseBody -> {
-                                // 응답에서 accessToken 추출
-                                token = extractBody.extractTokenFromBody(responseBody, "accessToken");
-                                log.info("Extracted Token: {}", token);
-
-                                if (token == null) {
-                                    return Mono.error(new IllegalArgumentException("Token not found in the response"));
-                                }
-
-                                // 토큰 검증 로직 추가 (예: JWT 검증)
-                                if ((tokenProvider.validateToken(token))) {
-                                    String user = tokenProvider.getUserIdFromToken(token);
-                                    response.setStatusCode(HttpStatus.FOUND);
-                                    log.info("Extracted User: {}", user);
-                                    response.getHeaders().add(HttpHeaders.AUTHORIZATION, "X-USERID " + user);
-
-                                    response.getHeaders().setLocation(URI.create("http://localhost:8081/service1/tcDstrctMng?userId="+user));
-                                    return Mono.empty();
-                                }
-                                    else {
-                                        return Mono.error(new IllegalArgumentException("Invalid token"));
-                                    }
-                                });
-                    });
+            return customFilterService.handleRequest(exchange, chain, request, response, url);
+//            return exchange.getRequest().getBody()
+//                    .collectList()
+//                    .flatMap(dataBuffers -> {
+//                        // 요청 바디를 읽기
+//                        String body = dataBuffers.stream()
+//                                .map(buffer -> StandardCharsets.UTF_8.decode(buffer.asByteBuffer()).toString())
+//                                .reduce("", String::concat);
+//
+//                        log.info("Request Body: {}", body);
+//
+//                        // body에서 username과 password 추출 (파싱 작업 필요)
+//                        String username = extractBody.extractValueFromBody(body, "username");
+//                        String password = extractBody.extractValueFromBody(body, "password");
+//
+//
+//                        if (username == null || password == null) {
+//                            return Mono.error(new IllegalArgumentException("Invalid login information"));
+//                        }
+//
+//                        if(!request.getPath().toString().contains("/login")){
+//                            return Mono.error(new IllegalArgumentException("Invalid login information"));
+//                        }
+//
+//                        // WebClient로 로그인 요청 전송
+//                         return WebClient.create()
+//                            .post()
+//                            .uri("http://localhost:8083/login")
+//                            .contentType(MediaType.APPLICATION_FORM_URLENCODED)
+//                            .bodyValue("username=" + username + "&password=" + password)
+//                            .retrieve()
+//                            .bodyToMono(String.class)
+//                            .flatMap(responseBody -> {
+//                                // 응답에서 accessToken 추출
+//                                token = extractBody.extractTokenFromBody(responseBody, "accessToken");
+//                                log.info("Extracted Token: {}", token);
+//
+//                                if (token == null) {
+//                                    return Mono.error(new IllegalArgumentException("Token not found in the response"));
+//                                }
+//
+//                                // 토큰 검증 로직 추가 (예: JWT 검증)
+//                                if ((tokenProvider.validateToken(token))) {
+//                                    String user = tokenProvider.getUserIdFromToken(token);
+//                                    response.setStatusCode(HttpStatus.FOUND);
+//                                    log.info("Extracted User: {}", user);
+//                                    response.getHeaders().add(HttpHeaders.AUTHORIZATION, "X-USERID " + user);
+//
+//                                    response.getHeaders().setLocation(URI.create("http://localhost:8081/service1/tcDstrctMng?userId="+user));
+//                                    return Mono.empty();
+//                                }
+//                                    else {
+//                                        return Mono.error(new IllegalArgumentException("Invalid token"));
+//                                    }
+//                                });
+//                    });
 
         };
     }
