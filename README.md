@@ -74,14 +74,6 @@ MIT License
 
 ---
 
-## 👨‍💻 Author
-
-GYEONGEUN PARK, 2024
-
-
-
----
-
 KOREAN.ver
 
 ---
@@ -160,11 +152,7 @@ cd scg_service
 
 MIT License
 
----
 
-## 👨‍💻 개발자
-
-박경은, 2024
 
 
 
