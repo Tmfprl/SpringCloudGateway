@@ -1,5 +1,3 @@
-
-```markdown
 # Spring Cloud Gateway Learning Service
 
 ## 📌 Description
@@ -83,9 +81,8 @@ GYEONGEUN PARK, 2024
 
 
 ---
-KOREAN.ver
 
-좋아요! 위 영어 버전을 기반으로 **한국어 버전 README**를 만들어 드리면 아래와 같습니다.
+KOREAN.ver
 
 ---
 
