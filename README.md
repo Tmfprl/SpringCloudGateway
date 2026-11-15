@@ -68,11 +68,17 @@ cd scg_service
 
 ---
 
-## 📜 License
+📄 License
 
-MIT License
+This project is licensed under the MIT License.
 
 ---
+
+📞 Contact
+
+GitHub: Tmfprl
+
+Email: gyeoungeun0322@gmail.com
 
 KOREAN.ver
 
@@ -148,9 +154,17 @@ cd scg_service
 
 ---
 
-## 📜 라이선스
+📄 라이선스
 
-MIT License
+This project is licensed under the MIT License.
+
+---
+
+📞 Contact
+
+GitHub: Tmfprl
+
+Email: gyeoungeun0322@gmail.com
 
 
 
