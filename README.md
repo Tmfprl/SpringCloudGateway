@@ -1,6 +1,3 @@
-좋아요! 요청하신 대로 **영어 버전으로 완전히 통일된 README**를 만들어드릴게요. `final_msa_service` 프로젝트 내 스타일에 맞춰 구성했습니다.
-
----
 
 ```markdown
 # Spring Cloud Gateway Learning Service
